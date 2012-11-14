@@ -19,7 +19,7 @@ subtest "latlng -> pixel xy" => sub {
     is $gmpp->lng_to_x(138), 226.13333333;
     is $gmpp->lat_to_y(35),  101.40104481;
 
-    $gmpp = new_instance(19);
+    $gmpp = new_instance(zoom => 19);
     is $gmpp->lng_to_x(180),              134_217_728;
     is $gmpp->lng_to_x(180, 19),          134_217_728;
     is $gmpp->lat_to_y(-85.05112878),     134_217_728;

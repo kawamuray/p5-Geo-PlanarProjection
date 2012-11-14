@@ -9,7 +9,7 @@ subtest "pixel -> tile" => sub {
     is $ggc->tileindexof(0),   0;
     is $ggc->tileindexof(128), 0;
 
-    $ggc = new_instance(1);
+    $ggc = new_instance(zoom => 1);
     is $ggc->tileindexof(0),   0;
     is $ggc->tileindexof(128), 0;
     is $ggc->tileindexof(256), 1;

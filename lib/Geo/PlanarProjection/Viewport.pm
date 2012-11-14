@@ -35,7 +35,7 @@ sub topend  { (shift)->{topend}  }
 
 sub pproj {
     my $self = shift;
-    $self->{pproj} ||= Geo::PlanarProjection->new($self->zoom);
+    $self->{pproj} ||= Geo::PlanarProjection->new(zoom => $self->zoom);
 }
 
 sub lng_to_imx {

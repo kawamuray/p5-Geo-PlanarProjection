@@ -11,8 +11,8 @@ our $DEFAULT_ZOOM = 0;
 our $TILE_SIZE    = 256;
 
 sub new {
-    my $class = shift;
-    bless { zoom => $_[0] // $DEFAULT_ZOOM }, $class;
+    my ($class, %opts) = @_;
+    bless { zoom => $opts{zoom} // $DEFAULT_ZOOM }, $class;
 }
 
 my @POW2CACHE;
@@ -90,15 +90,50 @@ __END__
 
 =head1 NAME
 
-Geo::PlanarProjection -
+Geo::PlanarProjection - Perl extension for calculate plane coordinates from lat,lng or do inverse
 
 =head1 SYNOPSIS
 
   use Geo::PlanarProjection;
 
+  my $pproj = Geo::PlanarProjection->new(zoom => 10);
+
+  my $x = $pproj->lng_to_x(135.0);                     #=> 229376
+  my $y = $pproj->lat_to_y(34.0);                      #=> 104718.26727936
+
+  or
+
+  my ($x, $y) = $pproj->latlng_to_xy(34.0, 135.0);    #=> (229376, 104718.26727936)
+
+  my $lat = $pproj->y_to_lat($y);                     #=> 34.0
+  my $lng = $pproj->x_to_lng($x);                     #=> 135.0
+
+  or
+
+  my ($lat, $lng) = $pproj->xy_to_latlng($x, $y);    #=> (34.0, 135.0)
+
+
+  # X-dimensional tile index
+  my $tx = $pproj->tileindex($x);                    #=> 896
+  # Y-dimensional tile index
+  my $ty = $pproj->tileindex($y);                    #=> 409
+
 =head1 DESCRIPTION
 
-Geo::PlanarProjection is
+Geo::PlanarProjection is a module for calculate plane coordinates from lat,lng or do inverse.
+
+This module can use to try making a map or something that needs to convert coordinates
+from lat,lng to coordinates that can be render to plane surface.
+
+=head2 COORDINATES SYSTEM
+
+I introduced the coordinates system for this module that is almostly like to a system that used for GoogleMaps.
+It is a very simple logic to project earth sphere to plane surface.
+
+First, you need to know about the "World Coordinates".
+
+World coordinates is originaly defined by Google to represents entire the earth
+in a plane surface that has upperleft(0, 0) and lowerright(256, 256) corner.
 
 =head1 AUTHOR
 
