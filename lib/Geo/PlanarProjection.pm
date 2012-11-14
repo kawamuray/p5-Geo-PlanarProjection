@@ -28,7 +28,7 @@ sub _zoomlv {
     _pow2of($zoom // $self->{zoom});
 }
 
-sub lng2x {
+sub lng_to_x {
     my ($self, $lng, $zoom) = @_;
 
     _round8(
@@ -36,7 +36,7 @@ sub lng2x {
     ) * $self->_zoomlv($zoom);
 }
 
-sub lat2y {
+sub lat_to_y {
     my ($self, $lat, $zoom) = @_;
 
     my $radlat = deg2rad($lat);
@@ -45,13 +45,13 @@ sub lat2y {
     ) * $self->_zoomlv($zoom);
 }
 
-sub latlng2xy {
+sub latlng_to_xy {
     my ($self, $lat, $lng, $zoom) = @_;
 
-    ( $self->lng2x($lng, $zoom), $self->lat2y($lat, $zoom) );
+    ( $self->lng_to_x($lng, $zoom), $self->lat_to_y($lat, $zoom) );
 }
 
-sub x2lng {
+sub x_to_lng {
     my ($self, $x, $zoom) = @_;
 
     _round8(
@@ -59,7 +59,7 @@ sub x2lng {
     );
 }
 
-sub y2lat {
+sub y_to_lat {
     my ($self, $y, $zoom) = @_;
 
     _round8(
@@ -67,10 +67,10 @@ sub y2lat {
     );
 }
 
-sub xy2latlng {
+sub xy_to_latlng {
     my ($self, $x, $y, $zoom) = @_;
 
-    ( $self->y2lat($y, $zoom), $self->x2lng($x, $zoom) );
+    ( $self->y_to_lat($y, $zoom), $self->x_to_lng($x, $zoom) );
 }
 
 sub tileindexof {

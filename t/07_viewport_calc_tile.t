@@ -12,14 +12,14 @@ subtest "End points" => sub {
 
 subtest "Calculate image X,Y coordinate from lat,lng" => sub {
     my $vp = new_viewport;
-    is $vp->imyoflat(35.630512),  456.000317440004;
-    is $vp->imxoflng(139.880562), 528.500080639991;
+    is $vp->lat_to_imy(35.630512),  456.000317440004;
+    is $vp->lng_to_imx(139.880562), 528.500080639991;
 };
 
 subtest "Calculate lat,lng from image X,Y" => sub {
     my $vp = new_viewport;
-    is $vp->latofimy(528), 35.5501057;
-    is $vp->lngofimx(456), 139.7809983;
+    is $vp->imy_to_lat(528), 35.5501057;
+    is $vp->imx_to_lng(456), 139.7809983;
 };
 
 subtest "Calculate viewport range" => sub {

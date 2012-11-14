@@ -31,32 +31,32 @@ sub new {
 
 sub leftend {
     my $self = shift;
-    $self->{gmpp}->lng2x($self->{clng}) - $self->{width} / 2;
+    $self->{gmpp}->lng_to_x($self->{clng}) - $self->{width} / 2;
 }
 
 sub topend {
     my $self = shift;
-    $self->{gmpp}->lat2y($self->{clat}) - $self->{height} / 2;
+    $self->{gmpp}->lat_to_y($self->{clat}) - $self->{height} / 2;
 }
 
-sub imxoflng {
+sub lng_to_imx {
     my ($self, $lng) = @_;
-    $self->{gmpp}->lng2x($lng) - $self->leftend;
+    $self->{gmpp}->lng_to_x($lng) - $self->leftend;
 }
 
-sub imyoflat {
+sub lat_to_imy {
     my ($self, $lat) = @_;
-    $self->{gmpp}->lat2y($lat) - $self->topend;
+    $self->{gmpp}->lat_to_y($lat) - $self->topend;
 }
 
-sub lngofimx {
+sub imx_to_lng {
     my ($self, $imx) = @_;
-    $self->{gmpp}->x2lng($imx + $self->leftend);
+    $self->{gmpp}->x_to_lng($imx + $self->leftend);
 }
 
-sub latofimy {
+sub imy_to_lat {
     my ($self, $imy) = @_;
-    $self->{gmpp}->y2lat($imy + $self->topend);
+    $self->{gmpp}->y_to_lat($imy + $self->topend);
 }
 
 sub range {
@@ -72,8 +72,8 @@ sub range_latlng {
     my $self = shift;
 
     (
-        [ $self->latofimy(0), $self->latofimy($self->{height}) ],
-        [ $self->lngofimx(0), $self->lngofimx($self->{width})  ],
+        [ $self->imy_to_lat(0), $self->imy_to_lat($self->{height}) ],
+        [ $self->imx_to_lng(0), $self->imx_to_lng($self->{width})  ],
     );
 }
 
