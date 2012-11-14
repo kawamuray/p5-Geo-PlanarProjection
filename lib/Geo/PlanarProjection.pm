@@ -135,6 +135,91 @@ First, you need to know about the "World Coordinates".
 World coordinates is originaly defined by Google to represents entire the earth
 in a plane surface that has upperleft(0, 0) and lowerright(256, 256) corner.
 
+In world coordinates, (x,y)=(0,0) is correspond to (lat,lng)=(85.0511287798066,-180),
+(x,y)=(256,256) is correspond to (lat,lng)=(-85.0511287798066,180).
+That means this module cannot handle coordinates out of range for
+lat between 85.0511287798066 and -85.0511287798066, for lng between -180 and 180.
+
+Second, you need to know about the "Pixel Coordinates".
+
+Pixel coordinates is a world coordinates with considering "zoom" coefficient.
+In the GoogleMaps world, zoom level is used between 0 and 19.
+
+Pixel coordinates is completely correspond to world coordinates when that zoom level is 0.
+Otherwise, pixel coordinates can be expressed by following equation.
+
+  x_pixel = x_world * 2^zoomlevel
+  y_pixel = y_world * 2^zoomlevel
+
+In this module, simply x or y means x_pixel or y_pixel.
+
+=head2 EQUATION
+
+World coordinates can be calculate by following equation.
+Let R be 128 / PI.
+
+  x_world = f(lng) = R * (lng + PI)
+  y_world = g(lat) = -(R / 2) * log( (1 + sin(lat)) / (1- sin(lat)) ) + 128
+
+In inverse.
+
+  lng = f^-1(x) = x / R - PI
+  lat = g^-1(y) = tan^-1( sinh((128-y) / R) )
+
+=head1 METHODS
+
+=head2 new()
+
+Create a blessed object of Geo::PlanarProjection
+You can specify a zoom as option.(If not, the value of $Geo::PlanarProjection::DEFAULT_ZOOM will be introduced)
+Specified zoom level will used as default value when you not specified the zoom level for each call of follwing methods.
+
+  my $pproj = Geo::PlanarProjection->new(zoom => 10);
+
+I recoomend to keep zoom level for between 0 and 19.(as a GoogleMaps regulartion)
+
+=head2 lng_to_x()
+
+Calculate the x in pixel coordinates by lng and zoom.
+
+  my $x = $pproj->lng_to_x($lng);
+  my $x = $pproj->lng_to_x($lng, $zoom);
+
+=head2 lat_to_y()
+
+Calculate the y in pixel coordinates by lat and zoom.
+
+  my $y = $pproj->lat_to_y($lat);
+  my $y = $pproj->lat_to_y($lat, $zoom);
+
+=head2 latlng_to_xy()
+
+Just internally call lng_to_x() and lat_to_y() for lat and lng.
+
+  my ($x, $y) = $pproj->latlng_to_xy($lat, $lng);
+  my ($x, $y) = $pproj->latlng_to_xy($lat, $lng, $zoom);
+
+=head2 x_to_lng()
+
+Calculate the lng by x and zoom.
+
+  my $lng = $pproj->x_to_lng($lng);
+  my $lng = $pproj->x_to_lng($lng, $zoom);
+
+=head2 y_to_lat()
+
+Calculate the lat by y and zoom.
+
+  my $lat = $pproj->y_to_lat($lat);
+  my $lat = $pproj->y_to_lat($lat, $zoom);
+
+=head2 xy_to_latlng()
+
+Just internally call x_to_lng() and y_to_lat() for x and y.
+
+  my ($lat, $lng) = $pproj->xy_to_latlng($x, $y);
+  my ($lat, $lng) = $pproj->xy_to_latlng($x, $y, $zoom);
+
 =head1 AUTHOR
 
 Yuto KAWAMURA(kawamuray) E<lt>kawamuray.dadada {at} gmail.comE<gt>
