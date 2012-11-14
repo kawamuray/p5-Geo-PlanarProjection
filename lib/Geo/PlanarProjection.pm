@@ -32,7 +32,7 @@ sub lng_to_x {
     my ($self, $lng, $zoom) = @_;
 
     _round8(
-        $R * (deg2rad($_[1]) + pi)
+        $R * (deg2rad($lng) + pi)
     ) * $self->_zoomlv($zoom);
 }
 
