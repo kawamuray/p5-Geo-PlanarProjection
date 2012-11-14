@@ -1,6 +1,6 @@
 use inc::Module::Install;
-name 'Geo-Map-PlanarProjection';
-all_from 'lib/Geo/Map/PlanarProjection.pm';
+name 'Geo-PlanarProjection';
+all_from 'lib/Geo/PlanarProjection.pm';
 
 # requires '';
 

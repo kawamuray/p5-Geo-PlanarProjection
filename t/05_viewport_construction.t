@@ -4,7 +4,7 @@ use Test::More;
 use t::Util;
 
 subtest "Construction" => sub {
-    ok my $vp = Geo::Map::PlanarProjection::Viewport->new(
+    ok my $vp = Geo::PlanarProjection::Viewport->new(
         width  => 800,
         height => 800,
         clat   => 35.692995,
@@ -12,7 +12,7 @@ subtest "Construction" => sub {
         zoom   => 10,
     );
 
-    isa_ok $vp, 'Geo::Map::PlanarProjection::Viewport';
+    isa_ok $vp, 'Geo::PlanarProjection::Viewport';
 };
 
 done_testing;

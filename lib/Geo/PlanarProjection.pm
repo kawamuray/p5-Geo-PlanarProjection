@@ -1,4 +1,4 @@
-package Geo::Map::PlanarProjection;
+package Geo::PlanarProjection;
 use strict;
 use warnings;
 use Carp;
@@ -90,15 +90,15 @@ __END__
 
 =head1 NAME
 
-Geo::Map::PlanarProjection -
+Geo::PlanarProjection -
 
 =head1 SYNOPSIS
 
-  use Geo::Map::PlanarProjection;
+  use Geo::PlanarProjection;
 
 =head1 DESCRIPTION
 
-Geo::Map::PlanarProjection is
+Geo::PlanarProjection is
 
 =head1 AUTHOR
 

@@ -1,9 +1,9 @@
-package Geo::Map::PlanarProjection::Viewport;
+package Geo::PlanarProjection::Viewport;
 use strict;
 use warnings;
 use Carp;
 
-use Geo::Map::PlanarProjection;
+use Geo::PlanarProjection;
 
 sub new {
     my ($class, %args) = @_;
@@ -24,7 +24,7 @@ sub new {
         croak "Unkown options where specified: ".join ',', keys %args;
     }
 
-    $self->{gmpp} = Geo::Map::PlanarProjection->new($self->{zoom});
+    $self->{gmpp} = Geo::PlanarProjection->new($self->{zoom});
 
     $self;
 }

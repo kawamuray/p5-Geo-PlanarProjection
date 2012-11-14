@@ -8,13 +8,13 @@ our @EXPORT = qw/
   new_viewport
 /;
 
-use Geo::Map::PlanarProjection;
-use Geo::Map::PlanarProjection::Viewport;
+use Geo::PlanarProjection;
+use Geo::PlanarProjection::Viewport;
 
-sub new_instance { Geo::Map::PlanarProjection->new(@_) }
+sub new_instance { Geo::PlanarProjection->new(@_) }
 
 sub new_viewport {
-    Geo::Map::PlanarProjection::Viewport->new(
+    Geo::PlanarProjection::Viewport->new(
         width  => 800,
         height => 800,
         clat   => 35.692995,
