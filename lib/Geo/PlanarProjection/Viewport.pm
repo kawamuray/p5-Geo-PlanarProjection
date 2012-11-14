@@ -38,24 +38,24 @@ sub pproj {
     $self->{pproj} ||= Geo::PlanarProjection->new(zoom => $self->zoom);
 }
 
-sub lng_to_imx {
+sub lng_to_vx {
     my ($self, $lng) = @_;
     $self->pproj->lng_to_x($lng) - $self->leftend;
 }
 
-sub lat_to_imy {
+sub lat_to_vy {
     my ($self, $lat) = @_;
     $self->pproj->lat_to_y($lat) - $self->topend;
 }
 
-sub imx_to_lng {
-    my ($self, $imx) = @_;
-    $self->pproj->x_to_lng($imx + $self->leftend);
+sub vx_to_lng {
+    my ($self, $vx) = @_;
+    $self->pproj->x_to_lng($vx + $self->leftend);
 }
 
-sub imy_to_lat {
-    my ($self, $imy) = @_;
-    $self->pproj->y_to_lat($imy + $self->topend);
+sub vy_to_lat {
+    my ($self, $vy) = @_;
+    $self->pproj->y_to_lat($vy + $self->topend);
 }
 
 sub range {
@@ -71,8 +71,8 @@ sub range_latlng {
     my $self = shift;
 
     (
-        [ $self->imy_to_lat(0), $self->imy_to_lat($self->height) ],
-        [ $self->imx_to_lng(0), $self->imx_to_lng($self->width)  ],
+        [ $self->vy_to_lat(0), $self->vy_to_lat($self->height) ],
+        [ $self->vx_to_lng(0), $self->vx_to_lng($self->width)  ],
     );
 }
 
@@ -111,17 +111,17 @@ Geo::PlanarProjection::Viewport - Viewport specific calculation using Geo:Planar
   $vp->topend;         # Top end coordinates in pixel coordinates
 
   # Calculate coordinates on viewport from lat,lng
-  my $imx = $vp->lng_to_imx(135.0);      #=> 400
-  my $imy = $vp->lng_to_imy(35.0);       #=> 400
+  my $vx = $vp->lng_to_vx(135.0);      #=> 400
+  my $vy = $vp->lng_to_vy(35.0);       #=> 400
 
   # Possibly the negative number or the number larger than width or height
   # if lat or lng is out of range of this viewport
-  $vp->lng_to_imx(135.9);                #=> 1055.35999999999
-  $vp->lat_to_imy(35.9);                 #=> -404.512512000001
+  $vp->lng_to_vx(135.9);                #=> 1055.35999999999
+  $vp->lat_to_vy(35.9);                 #=> -404.512512000001
 
-  # Inverse calculation from imx,imy to lat,lng
-  $vp->imx_to_lng(400);                  #=> 135.0
-  $vp->imy_to_lat(400);                  #=> 35.0
+  # Inverse calculation from vx,vy to lat,lng
+  $vp->vx_to_lng(400);                  #=> 135.0
+  $vp->vy_to_lat(400);                  #=> 35.0
 
   # Get a range that is visible in this viewport
   # In pixel coordinates
@@ -244,30 +244,29 @@ Get a top end coordinates in pixel coordinates.
 
 Get a Geo::PlanarProjection object that was initialized by zoom level of this viewport.
 
-=head2 lng_to_imx()
+=head2 lng_to_vx()
 
 Calculate the x coordinates on viewport by lng.
 
-  my $x = $pproj->lng_to_imx($lng);
+  my $x = $pproj->lng_to_vx($lng);
 
-=head2 lat_to_imy()
+=head2 lat_to_vy()
 
 Calculate the y coordinates on viewport by lat.
 
-  my $y = $pproj->lat_to_imy($lat);
+  my $y = $pproj->lat_to_vy($lat);
 
-=head2 imx_to_lng()
+=head2 vx_to_lng()
 
 Calculate the lng of a x on viewport.
 
-  my $x = $pproj->x_to_lng($imx);
+  my $x = $pproj->x_to_lng($vx);
 
-=head2 imy_to_lat()
+=head2 vy_to_lat()
 
 Calculate the lat of a y on viewport.
 
-  my $y = $pproj->y_to_lat($imy);
-
+  my $y = $pproj->y_to_lat($vy);
 
 =head1 AUTHOR
 
