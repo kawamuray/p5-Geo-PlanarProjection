@@ -101,22 +101,18 @@ Geo::PlanarProjection - Perl extension for calculate plane coordinates from lat,
   my $x = $pproj->lng_to_x(135.0);                     #=> 229376
   my $y = $pproj->lat_to_y(34.0);                      #=> 104718.26727936
 
-  or
+  my ($x, $y) = $pproj->latlng_to_xy(34.0, 135.0);     #=> (229376, 104718.26727936)
 
-  my ($x, $y) = $pproj->latlng_to_xy(34.0, 135.0);    #=> (229376, 104718.26727936)
+  my $lat = $pproj->y_to_lat($y);                      #=> 34.0
+  my $lng = $pproj->x_to_lng($x);                      #=> 135.0
 
-  my $lat = $pproj->y_to_lat($y);                     #=> 34.0
-  my $lng = $pproj->x_to_lng($x);                     #=> 135.0
-
-  or
-
-  my ($lat, $lng) = $pproj->xy_to_latlng($x, $y);    #=> (34.0, 135.0)
+  my ($lat, $lng) = $pproj->xy_to_latlng($x, $y);      #=> (34.0, 135.0)
 
 
   # X-dimensional tile index
-  my $tx = $pproj->tileindex($x);                    #=> 896
+  my $tx = $pproj->tileindex($x);                      #=> 896
   # Y-dimensional tile index
-  my $ty = $pproj->tileindex($y);                    #=> 409
+  my $ty = $pproj->tileindex($y);                      #=> 409
 
 =head1 DESCRIPTION
 
@@ -176,7 +172,7 @@ Specified zoom level will used as default value when you not specified the zoom 
 
   my $pproj = Geo::PlanarProjection->new(zoom => 10);
 
-I recoomend to keep zoom level for between 0 and 19.(as a GoogleMaps regulartion)
+I recommend to keep zoom level for between 0 and 19.(as a GoogleMaps regulation)
 
 =head2 lng_to_x()
 
