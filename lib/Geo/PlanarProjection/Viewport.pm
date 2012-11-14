@@ -256,7 +256,6 @@ Calculate the y coordinates on viewport by lat.
 
   my $y = $pproj->lat_to_imy($lat);
 
-
 =head2 imx_to_lng()
 
 Calculate the lng of a x on viewport.
