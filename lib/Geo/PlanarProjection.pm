@@ -147,7 +147,8 @@ Otherwise, pixel coordinates can be expressed by following equation.
   x_pixel = x_world * 2^zoomlevel
   y_pixel = y_world * 2^zoomlevel
 
-In this module, simply x or y means x_pixel or y_pixel.
+In this module, simply x or y is a abbreviation for x_pixel or y_pixel.
+For example, lng_to_x() method is a function to get a x_pixel value on point of lng.
 
 =head2 EQUATION
 
