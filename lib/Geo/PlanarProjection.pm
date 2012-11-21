@@ -123,7 +123,7 @@ from lat,lng to coordinates that can be render to plane surface.
 
 =head2 COORDINATES SYSTEM
 
-I introduced the coordinates system for this module that is almostly like to a system that used for GoogleMaps.
+I adopted the coordinates system for this module that is almostly like to a system that used for GoogleMaps.
 It is a very simple logic to project earth sphere to plane surface.
 
 First, you need to know about the "World Coordinates".
@@ -168,7 +168,7 @@ In inverse.
 =head2 new()
 
 Create a blessed object of Geo::PlanarProjection
-You can specify a zoom as option.(If not, the value of $Geo::PlanarProjection::DEFAULT_ZOOM will be introduced)
+You can specify a zoom as option.(If not, the value of $Geo::PlanarProjection::DEFAULT_ZOOM will be adopted)
 Specified zoom level will used as default value when you not specified the zoom level for each call of follwing methods.
 
   my $pproj = Geo::PlanarProjection->new(zoom => 10);
