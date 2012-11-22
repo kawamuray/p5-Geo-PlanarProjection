@@ -192,7 +192,7 @@ in this viewport context:
   | right,bottom | 229776,104234.66988544 | 34.54879151,135.54931641 | 800,800      |
   -----------------------------------------------------------------------------------
 
-X or Y value of viewport coordinates can be used directory to render some object to
+X or Y value of viewport coordinates can be used directly to render some object to
 image or something that has a same size of viewport.
 
 =head1 METHODS
