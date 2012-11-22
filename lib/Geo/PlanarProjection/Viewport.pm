@@ -162,7 +162,7 @@ width, height, center coordinates and zoom level.
 
 For example, let width be 800, let height be 800, let clat be 35.0, let clng be 135.0 and let zoom be 10.
 
-Center (lat,lng) is (35.0, 135.0). In the pixel coordinates:
+Center (lat,lng) is (35.0, 135.0). In pixel coordinates:
 
   center_x = 229376
   center_y = 103834.66988544
