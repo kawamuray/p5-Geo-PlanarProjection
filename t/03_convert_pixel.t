@@ -4,26 +4,41 @@ use Test::More;
 use t::Util;
 
 subtest "latlng -> pixel xy" => sub {
-    my $gmpp = new_instance;
+    my $pproj = new_instance;
 
-    is $gmpp->lat_to_y( 85.05112878),    0;
-    is $gmpp->lat_to_y( 85.05112878, 0), 0;
-    is $gmpp->lat_to_y(-85.05112878),    256;
-    is $gmpp->lat_to_y(-85.05112878, 0), 256;
+    my $cvt = $pproj->converter(
+        from => 'lat',
+        to   => 'pixel',
+    );
 
-    is $gmpp->lng_to_x(-180),    0;
-    is $gmpp->lng_to_x(-180, 0), 0;
-    is $gmpp->lng_to_x( 180),    256;
-    is $gmpp->lng_to_x( 180, 0), 256;
+    is $cvt->( 85.05112878), 0;
+    is $cvt->(-85.05112878), 256;
+    is $cvt->(35),           101.40104481;
 
-    is $gmpp->lng_to_x(138), 226.13333333;
-    is $gmpp->lat_to_y(35),  101.40104481;
+    $cvt = $pproj->converter(
+        from => 'lng',
+        to   => 'pixel',
+    );
 
-    $gmpp = new_instance(zoom => 19);
-    is $gmpp->lng_to_x(180),              134_217_728;
-    is $gmpp->lng_to_x(180, 19),          134_217_728;
-    is $gmpp->lat_to_y(-85.05112878),     134_217_728;
-    is $gmpp->lat_to_y(-85.05112878, 19), 134_217_728;
+    is $cvt->(-180), 0;
+    is $cvt->(180),  256;
+    is $cvt->(138),  226.13333333;
+
+    $cvt = $pproj->converter(
+        from => 'lng',
+        to   => 'pixel',
+        zoom => 19,
+    );
+    is $cvt->(180),     134_217_728;
+    is $cvt->(180, 19), 134_217_728;
+
+    $cvt = $pproj->converter(
+        from => 'lat',
+        to   => 'pixel',
+        zoom => 19,
+    );
+    is $cvt->(-85.05112878),     134_217_728;
+    is $cvt->(-85.05112878, 19), 134_217_728;
 };
 
 subtest "pixel xy -> latlng" => sub {

@@ -26,17 +26,4 @@ subtest "_pow2of" => sub {
     }
 };
 
-subtest "_zoomlv" => sub {
-    my $gmpp = new_instance;
-
-    is $gmpp->_zoomlv(undef), 2**$Geo::PlanarProjection::DEFAULT_ZOOM;
-
-    $Geo::PlanarProjection::DEFAULT_ZOOM = 5;
-    $gmpp = new_instance;
-    is $gmpp->_zoomlv(undef), 32;
-
-    is $gmpp->_zoomlv(1),     2;
-    is $gmpp->_zoomlv(19),    524288;
-};
-
 done_testing;

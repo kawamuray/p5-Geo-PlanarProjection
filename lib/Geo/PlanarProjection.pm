@@ -23,66 +23,107 @@ sub _pow2of {
 
 sub _round8 { sprintf("%.8f", $_[0]) + 0 }
 
-sub _zoomlv {
-    my ($self, $zoom) = @_;
-    _pow2of($zoom // $self->{zoom});
+sub converter {
+    my $self = shift;
+    my %opts = $self->_mixoptions(@_);
+
+    my $from = delete $opts{from} or croak "You must speficy from";
+    my $to   = delete $opts{to}   or croak "You must specify to";
+
+    my $cvtname = "_from_${from}_to_${to}";
+    if ($self->can($cvtname)) {
+        $self->$cvtname(%opts);
+    } else {
+        croak "I can't make converter from $from to $to";
+    }
 }
 
-sub lng_to_x {
-    my ($self, $lng, $zoom) = @_;
+sub convert {
+    my ($self, %opts) = @_;
 
-    _round8(
-        $R * (deg2rad($lng) + pi)
-    ) * $self->_zoomlv($zoom);
+    $self->converter(%opts)->($opts{ $opts{from} });
 }
 
-sub lat_to_y {
-    my ($self, $lat, $zoom) = @_;
-
-    my $radlat = deg2rad($lat);
-    _round8(
-        -($R/2) * log( (1 + sin($radlat)) / (1 - sin($radlat)) ) + 128
-    ) * $self->_zoomlv($zoom);
+sub _mixoptions {
+    my $self = shift;
+    ( zoom => $self->zoom, @_ );
 }
 
-sub latlng_to_xy {
-    my ($self, $lat, $lng, $zoom) = @_;
+sub _from_lng_to_x {
+    my ($self, %opts) = @_;
 
-    ( $self->lng_to_x($lng, $zoom), $self->lat_to_y($lat, $zoom) );
+    sub {
+        _round8(
+            $R * (deg2rad($$_[0]) + pi)
+        ) * _pow2of($opts{zoom});
+    }
 }
 
-sub x_to_lng {
-    my ($self, $x, $zoom) = @_;
+sub _from_lat_to_y {
+    my ($self, %opts) = @_;
 
-    _round8(
-        rad2deg( $x / $self->_zoomlv($zoom) / $R - pi )
-    );
+    sub {
+        my $radlat = deg2rad($_[0]);
+        _round8(
+            -($R/2) * log( (1 + sin($radlat)) / (1 - sin($radlat)) ) + 128
+        ) * _pow2of($opts{zoom});
+    }
 }
 
-sub y_to_lat {
-    my ($self, $y, $zoom) = @_;
+sub _from_latlng_to_xy {
+    my ($self, %opts) = @_;
 
-    _round8(
-        rad2deg( atan2(sinh( (128 - $y / $self->_zoomlv($zoom)) / $R ), 1) )
-    );
+    my $latc = $self->_from_lat_to_y(%opts);
+    my $lngc = $self->_from_lng_to_x(%opts);
+
+    sub {
+        my ($lat, $lng) = @_;
+        ($lngc->($lng), $latc->($lat));
+    }
 }
 
-sub xy_to_latlng {
-    my ($self, $x, $y, $zoom) = @_;
+sub _from_x_to_lng {
+    my ($self, %opts) = @_;
 
-    ( $self->y_to_lat($y, $zoom), $self->x_to_lng($x, $zoom) );
+    sub {
+        _round8(
+            rad2deg( $_[0] / _pow2of($opts{zoom}) / $R - pi )
+        );
+    }
 }
 
-sub tileindexof {
-    my ($self, $pv) = @_;
+sub _from_y_to_lat {
+    my ($self, %opts) = @_;
 
-    int( $pv / $TILE_SIZE );
+    sub {
+        _round8(
+            rad2deg( atan2(sinh( (128 - $_[0] / _pow2of($opts{zoom})) / $R ), 1) )
+        );
+    }
 }
 
-sub tileindexofs {
-    my ($self, $pv) = @_;
+sub _from_xy_to_latlng {
+    my ($self, %opts) = @_;
 
-    ( $self->tileindexof($pv), $pv % $TILE_SIZE );
+    my $xc = $self->_from_x_to_lng(%opts);
+    my $yc = $self->_from_y_to_lat(%opts);
+
+    sub {
+        my ($x, $y) = @_;
+        ($yc->($y), $xc->($x));
+    }
+}
+
+sub _from_x_to_tileindex {
+    my $self = shift;
+
+    sub {
+        int( $_[0] / $TILE_SIZE );
+    }
+}
+
+sub _from_y_to_tileindex {
+    _from_x_to_tileindex(@_)
 }
 
 1;
