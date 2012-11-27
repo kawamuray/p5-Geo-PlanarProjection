@@ -15,6 +15,8 @@ sub new {
     bless { zoom => $opts{zoom} // $DEFAULT_ZOOM }, $class;
 }
 
+sub zoom { (shift)->{zoom} }
+
 my @POW2CACHE;
 sub _pow2of {
     my $zoom = shift;
@@ -23,54 +25,53 @@ sub _pow2of {
 
 sub _round8 { sprintf("%.8f", $_[0]) + 0 }
 
-sub converter {
-    my $self = shift;
-    my %opts = $self->_mixoptions(@_);
+sub _mixoptions {
+    my ($self, $opts) = @_;
+    ( zoom => $self->zoom, (ref $opts && ref $opts eq 'HASH') ? %$opts : () );
+}
 
-    my $from = delete $opts{from} or croak "You must speficy from";
-    my $to   = delete $opts{to}   or croak "You must specify to";
+sub converter {
+    my ($self, $from, $to, $opts) = @_;
+    my %opts = $self->_mixoptions($opts);
 
     my $cvtname = "_from_${from}_to_${to}";
     if ($self->can($cvtname)) {
         $self->$cvtname(%opts);
     } else {
-        croak "I can't make converter from $from to $to";
+        croak "I can't make converter '$from' => '$to'";
     }
 }
 
 sub convert {
-    my ($self, %opts) = @_;
-
-    $self->converter(%opts)->($opts{ $opts{from} });
-}
-
-sub _mixoptions {
     my $self = shift;
-    ( zoom => $self->zoom, @_ );
+
+    $self->converter(@_)->(
+        (ref $_[2] && ref $_[2] eq 'HASH') ? $_[3] : $_[2]
+    );
 }
 
-sub _from_lng_to_x {
+sub _from_lng_to_pixel_x {
     my ($self, %opts) = @_;
 
     sub {
         _round8(
-            $R * (deg2rad($$_[0]) + pi)
+            $R * (deg2rad($_[0]) + pi)
         ) * _pow2of($opts{zoom});
     }
 }
 
-sub _from_lat_to_y {
+sub _from_lat_to_pixel_y {
     my ($self, %opts) = @_;
 
     sub {
-        my $radlat = deg2rad($_[0]);
+        my $sinradlat = sin(deg2rad($_[0]));
         _round8(
-            -($R/2) * log( (1 + sin($radlat)) / (1 - sin($radlat)) ) + 128
+            -($R/2) * log( (1 + $sinradlat) / (1 - $sinradlat) ) + 128
         ) * _pow2of($opts{zoom});
     }
 }
 
-sub _from_latlng_to_xy {
+sub _from_latlng_to_pixel_xy {
     my ($self, %opts) = @_;
 
     my $latc = $self->_from_lat_to_y(%opts);
@@ -82,7 +83,7 @@ sub _from_latlng_to_xy {
     }
 }
 
-sub _from_x_to_lng {
+sub _from_pixel_x_to_lng {
     my ($self, %opts) = @_;
 
     sub {
@@ -92,7 +93,7 @@ sub _from_x_to_lng {
     }
 }
 
-sub _from_y_to_lat {
+sub _from_pixel_y_to_lat {
     my ($self, %opts) = @_;
 
     sub {
@@ -102,7 +103,7 @@ sub _from_y_to_lat {
     }
 }
 
-sub _from_xy_to_latlng {
+sub _from_pixel_xy_to_latlng {
     my ($self, %opts) = @_;
 
     my $xc = $self->_from_x_to_lng(%opts);
@@ -114,7 +115,7 @@ sub _from_xy_to_latlng {
     }
 }
 
-sub _from_x_to_tileindex {
+sub _from_pixel_x_to_tileindex {
     my $self = shift;
 
     sub {
@@ -122,8 +123,8 @@ sub _from_x_to_tileindex {
     }
 }
 
-sub _from_y_to_tileindex {
-    _from_x_to_tileindex(@_)
+sub _from_pixel_y_to_tileindex {
+    _from_pixel_x_to_tileindex(@_)
 }
 
 1;

@@ -5,12 +5,12 @@ use t::Util;
 
 use Geo::PlanarProjection;
 
-subtest "Method new" => sub {
-    ok my $gmpp = Geo::PlanarProjection->new;
-    isa_ok $gmpp, 'Geo::PlanarProjection';
+subtest "Construct new instance" => sub {
+    ok my $pproj = Geo::PlanarProjection->new;
+    isa_ok $pproj, 'Geo::PlanarProjection';
 
-    ok $gmpp = Geo::PlanarProjection->new(zoom => 10);
-    isa_ok $gmpp, 'Geo::PlanarProjection';
+    ok $pproj = Geo::PlanarProjection->new(zoom => 10);
+    isa_ok $pproj, 'Geo::PlanarProjection';
 };
 
 done_testing;

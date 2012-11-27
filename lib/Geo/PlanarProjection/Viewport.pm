@@ -3,24 +3,19 @@ use strict;
 use warnings;
 use Carp;
 
-use Geo::PlanarProjection;
+use parent 'Geo::PlanarProjection';
 
 sub new {
     my ($class, %args) = @_;
-    my $self = bless {}, $class;
+    my $self = $class->SUPER::new(%args);
 
-    $self->{width}  = delete $args{width};
-    $self->{height} = delete $args{height};
-    $self->{clat}   = delete $args{clat};
-    $self->{clng}   = delete $args{clng};
-    $self->{zoom}   = delete $args{zoom};
+    $self->{width}  = $args{width};
+    $self->{height} = $args{height};
+    $self->{clat}   = $args{clat};
+    $self->{clng}   = $args{clng};
 
-    if (%args) {
-        croak "Unkown options where specified: ".join ',', keys %args;
-    }
-
-    $self->{leftend} = $self->pproj->lng_to_x($self->clng) - $self->width / 2;
-    $self->{topend} = $self->pproj->lat_to_y($self->clat) - $self->height / 2;
+    $self->{leftend} = $self->convert('lng' => 'pixel_x', $args{clng}) - $self->width / 2;
+    $self->{topend}  = $self->convert('lat' => 'pixel_y', $args{clat}) - $self->height / 2;
 
     $self;
 }
@@ -29,33 +24,47 @@ sub width   { (shift)->{width}   }
 sub height  { (shift)->{height}  }
 sub clat    { (shift)->{clat}    }
 sub clng    { (shift)->{clng}    }
-sub zoom    { (shift)->{zoom}    }
 sub leftend { (shift)->{leftend} }
 sub topend  { (shift)->{topend}  }
 
-sub pproj {
+sub _from_lng_to_view_x {
     my $self = shift;
-    $self->{pproj} ||= Geo::PlanarProjection->new(zoom => $self->zoom);
+
+    my $lngtopx = $self->converter('lng' => 'pixel_x', @_);
+
+    sub {
+        $lngtopx->(shift) - $self->leftend;
+    };
 }
 
-sub lng_to_vx {
-    my ($self, $lng) = @_;
-    $self->pproj->lng_to_x($lng) - $self->leftend;
+sub _from_lat_to_view_y {
+    my $self = shift;
+
+    my $lattopy = $self->converter('lat' => 'pixel_y', @_);
+
+    sub {
+        $lattopy->(shift) - $self->topend;
+    };
 }
 
-sub lat_to_vy {
-    my ($self, $lat) = @_;
-    $self->pproj->lat_to_y($lat) - $self->topend;
+sub _from_view_x_to_lng {
+    my $self = shift;
+
+    my $pxtolng = $self->converter('pixel_x' => 'lng', @_);
+
+    sub {
+        $pxtolng->(shift() + $self->leftend);
+    };
 }
 
-sub vx_to_lng {
-    my ($self, $vx) = @_;
-    $self->pproj->x_to_lng($vx + $self->leftend);
-}
+sub _from_view_y_to_lat {
+    my $self = shift;
 
-sub vy_to_lat {
-    my ($self, $vy) = @_;
-    $self->pproj->y_to_lat($vy + $self->topend);
+    my $pytolat = $self->converter('pixel_y' => 'lat', @_);
+
+    sub {
+        $pytolat->(shift() + $self->topend);
+    };
 }
 
 sub range {
@@ -70,9 +79,12 @@ sub range {
 sub range_latlng {
     my $self = shift;
 
+    my $vxtolng = $self->converter('view_x' => 'lng');
+    my $vytolat = $self->converter('view_y' => 'lat');
+
     (
-        [ $self->vy_to_lat(0), $self->vy_to_lat($self->height) ],
-        [ $self->vx_to_lng(0), $self->vx_to_lng($self->width)  ],
+        [ $vytolat->(0), $vytolat->($self->height) ],
+        [ $vxtolng->(0), $vxtolng->($self->width)  ],
     );
 }
 
@@ -81,10 +93,10 @@ sub range_tile {
 
     my ($xrange, $yrange) = $self->range;
 
-    my $pproj = $self->pproj;
+    my $pxtotile = $self->converter('pixel_x' => 'tileindex');
     (
-        [ $pproj->tileindexof($xrange->[0]), $pproj->tileindexof($xrange->[1]) + 1 ],
-        [ $pproj->tileindexof($yrange->[0]), $pproj->tileindexof($yrange->[1]) + 1 ],
+        [ $pxtotile->($xrange->[0]), $pxtotile->($xrange->[1]) + 1 ],
+        [ $pxtotile->($yrange->[0]), $pxtotile->($yrange->[1]) + 1 ],
     );
 }
 

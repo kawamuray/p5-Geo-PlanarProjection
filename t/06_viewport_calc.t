@@ -12,14 +12,14 @@ subtest "End points" => sub {
 
 subtest "Calculate image X,Y coordinate from lat,lng" => sub {
     my $vp = new_viewport;
-    is $vp->lat_to_vy(35.630512),  456.000317440004;
-    is $vp->lng_to_vx(139.880562), 528.500080639991;
+    is $vp->convert('lat' => 'view_y', 35.630512),  456.000317440004;
+    is $vp->convert('lng' => 'view_x', 139.880562), 528.500080639991;
 };
 
 subtest "Calculate lat,lng from image X,Y" => sub {
     my $vp = new_viewport;
-    is $vp->vy_to_lat(528), 35.5501057;
-    is $vp->vx_to_lng(456), 139.7809983;
+    is $vp->convert('view_y' => 'lat', 528), 35.5501057;
+    is $vp->convert('view_x' => 'lng', 456), 139.7809983;
 };
 
 subtest "Calculate viewport range" => sub {

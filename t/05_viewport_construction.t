@@ -13,6 +13,7 @@ subtest "Construction" => sub {
     );
 
     isa_ok $vp, 'Geo::PlanarProjection::Viewport';
+    isa_ok $vp, 'Geo::PlanarProjection';
 };
 
 done_testing;
