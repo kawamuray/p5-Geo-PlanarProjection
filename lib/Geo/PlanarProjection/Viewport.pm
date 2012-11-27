@@ -105,7 +105,7 @@ __END__
 
 =head1 NAME
 
-Geo::PlanarProjection::Viewport - Viewport specific calculation using Geo:PlanarProjection
+Geo::PlanarProjection::Viewport - Viewport specific calculation extending Geo:PlanarProjection
 
 =head1 SYNOPSIS
 
@@ -116,24 +116,26 @@ Geo::PlanarProjection::Viewport - Viewport specific calculation using Geo:Planar
       height => 800,   # viewport height in pixel
       clat   => 35.0,  # viewport center lat
       clng   => 135.0, # viewport center lng
-      zoom => 10,      # zoom level for this viewport
+      zoom   => 10,    # zoom level for this viewport
   );
+
+  $vp->isa('Geo::PlanarProjection');  #=> true
 
   $vp->leftend;        # Left end coordinates in pixel coordinates
   $vp->topend;         # Top end coordinates in pixel coordinates
 
   # Calculate coordinates on viewport from lat,lng
-  my $vx = $vp->lng_to_vx(135.0);      #=> 400
-  my $vy = $vp->lng_to_vy(35.0);       #=> 400
+  my $vx = $vp->convert('lng' => 'view_x', 135.0);      #=> 400
+  my $vy = $vp->convert('lat' => 'view_y', 35.0);       #=> 400
 
   # Possibly the negative number or the number larger than width or height
   # if lat or lng is out of range of this viewport
-  $vp->lng_to_vx(135.9);                #=> 1055.35999999999
-  $vp->lat_to_vy(35.9);                 #=> -404.512512000001
+  $vp->convert('lng' => 'view_x', 135.9);                #=> 1055.35999999999
+  $vp->convert('lat' => 'view_y', 35.9);                 #=> -404.512512000001
 
   # Inverse calculation from vx,vy to lat,lng
-  $vp->vx_to_lng(400);                  #=> 135.0
-  $vp->vy_to_lat(400);                  #=> 35.0
+  $vp->convert('view_x' => 'lng', 400);                  #=> 135.0
+  $vp->convert('view_y' => 'lat', 400);                  #=> 35.0
 
   # Get a range that is visible in this viewport
   # In pixel coordinates
@@ -179,7 +181,7 @@ Center (lat,lng) is (35.0, 135.0). In pixel coordinates:
   center_x = 229376
   center_y = 103834.66988544
 
-This can be calculated by using latlng_to_xy() method of Geo::PlanarProjection.
+This can be calculated by using ->convert('latlng' => 'pixel_xy') of Geo::PlanarProjection.
 
 Left x and top y of this viewport is:
 
@@ -213,7 +215,13 @@ image or something that has a same size of viewport.
 
 Create a blessed object of Geo::PlanarProjection::Viewport.
 
-  my $pproj = Geo::PlanarProjection->new(zoom => 10);
+  my $vp = Geo::PlanarProjection::Viewport->new(
+      width  => 800,   # viewport width in pixel
+      height => 800,   # viewport height in pixel
+      clat   => 35.0,  # viewport center lat
+      clng   => 135.0, # viewport center lng
+      zoom   => 10,    # zoom level for this viewport
+  );
 
 You must specify the following arguments representing profile of viewport.
 
@@ -252,39 +260,37 @@ Get a left end coordinates in pixel coordinates.
 
 Get a top end coordinates in pixel coordinates.
 
-=head2 pproj()
+=head2 converter()
 
-Get a Geo::PlanarProjection object that was initialized by zoom level of this viewport.
+See also Geo::PlanarProjection.
 
-=head2 lng_to_vx()
+=head3 Conversion patterns
 
-Calculate the x coordinates on viewport by lng.
+This module extends conversion for following list patterns.
 
-  my $x = $pproj->lng_to_vx($lng);
+=over
 
-=head2 lat_to_vy()
+=item - lat => view_y
 
-Calculate the y coordinates on viewport by lat.
+=item - lng => view_x
 
-  my $y = $pproj->lat_to_vy($lat);
+=item - view_x => lng
 
-=head2 vx_to_lng()
+=item - view_y => lat
 
-Calculate the lng of a x on viewport.
+=back
 
-  my $x = $pproj->x_to_lng($vx);
+=head2 convert()
 
-=head2 vy_to_lat()
-
-Calculate the lat of a y on viewport.
-
-  my $y = $pproj->y_to_lat($vy);
+See alos above seciton converter() and Geo::PlanarProjection
 
 =head1 AUTHOR
 
 Yuto KAWAMURA(kawamuray) E<lt>kawamuray.dadada {at} gmail.comE<gt>
 
 =head1 SEE ALSO
+
+Geo::PlanarProjection
 
 =head1 LICENSE
 
