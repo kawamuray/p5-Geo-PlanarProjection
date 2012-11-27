@@ -8,22 +8,26 @@ Geo::PlanarProjection - Perl extension for calculate plane coordinates from lat,
 
     my $pproj = Geo::PlanarProjection->new(zoom => 10);
 
-    my $x = $pproj->lng_to_x(135.0);                     #=> 229376
-    my $y = $pproj->lat_to_y(34.0);                      #=> 104718.26727936
+    my $x = $pproj->convert('lng' => 'pixel_x', 135.0);                     #=> 229376
+    my $y = $pproj->convert('lat' => 'pixel_y', 34.0);                      #=> 104718.26727936
 
-    my ($x, $y) = $pproj->latlng_to_xy(34.0, 135.0);     #=> (229376, 104718.26727936)
+    or get a converter if you may convert multiple values
 
-    my $lat = $pproj->y_to_lat($y);                      #=> 34.0
-    my $lng = $pproj->x_to_lng($x);                      #=> 135.0
+    my $lng_to_x = $pproj->converter('lng' => 'pixel_x');
+    my $y = $lng_to_x->(135.0);                                             #=> 104718.26727936
 
-    my ($lat, $lng) = $pproj->xy_to_latlng($x, $y);      #=> (34.0, 135.0)
+    my ($x, $y) = $pproj->convert('latlng' => 'pixel_xy', 34.0, 135.0);     #=> (229376, 104718.26727936)
 
+    my $lat = $pproj->convert('pixel_y' => 'lat', $y);                      #=> 34.0
+    my $lng = $pproj->convert('pixel_x' => 'lng', $x);                      #=> 135.0
 
+    my $xy_to_latlng = $pproj->converter('pixel_xy' => 'latlng');
+    my ($lat, $lng) = $xy_to_latlng->($x, $y);                              #=> (34.0, 135.0)
 
     # X-dimensional tile index
-    my $tx = $pproj->tileindex($x);                      #=> 896
+    my $tx = $pproj->convert('pixel_x' => 'tileindex', $x);                 #=> 896
     # Y-dimensional tile index
-    my $ty = $pproj->tileindex($y);                      #=> 409
+    my $ty = $pproj->convert('pixel_y' => 'tileindex', $y);                 #=> 409
 
 # DESCRIPTION
 
@@ -34,7 +38,7 @@ from lat,lng to coordinates that can be render to plane surface.
 
 ## COORDINATES SYSTEM
 
-I introduced the coordinates system for this module that is almostly like to a system that used for GoogleMaps.
+I adopted the coordinates system for this module that is almostly like to a system that used for GoogleMaps.
 It is a very simple logic to project earth sphere to plane surface.
 
 First, you need to know about the "World Coordinates".
@@ -58,7 +62,7 @@ Otherwise, pixel coordinates can be expressed by following equation.
     x_pixel = x_world * 2^zoomlevel
     y_pixel = y_world * 2^zoomlevel
 
-In this module, simply x or y means x\_pixel or y\_pixel.
+In this module, simply x or y is a abbreviation for x\_pixel or y\_pixel.
 
 ## EQUATION
 
@@ -78,54 +82,55 @@ In inverse.
 ## new()
 
 Create a blessed object of Geo::PlanarProjection
-You can specify a zoom as option.(If not, the value of $Geo::PlanarProjection::DEFAULT\_ZOOM will be introduced)
+You can specify a zoom as option.(If not, the value of $Geo::PlanarProjection::DEFAULT\_ZOOM will be adopted)
 Specified zoom level will used as default value when you not specified the zoom level for each call of follwing methods.
 
     my $pproj = Geo::PlanarProjection->new(zoom => 10);
 
 I recommend to keep zoom level for between 0 and 19.(as a GoogleMaps regulation)
 
-## lng\_to\_x()
+## converter()
 
-Calculate the x in pixel coordinates by lng and zoom.
+Create and return a subroutine that can be used to convert some value from A to B.
 
-    my $x = $pproj->lng_to_x($lng);
-    my $x = $pproj->lng_to_x($lng, $zoom);
+    my $lng_to_px   = $self->converter('lng' => 'pixel_x');
+    my $lng_to_px19 = $self->converter('lng' => 'pixel_x', { zoom => 19 });
 
-## lat\_to\_y()
+### Conversion patterns
 
-Calculate the y in pixel coordinates by lat and zoom.
+The specifications for A and B are arranged at following list.
 
-    my $y = $pproj->lat_to_y($lat);
-    my $y = $pproj->lat_to_y($lat, $zoom);
+- \- lat => pixel\_y
+- \- lng => pixel\_x
+- \- latlng => pixel\_xy
+- \- pixel\_x => lng
+- \- pixel\_y => lat
+- \- pixel\_xy => latlng
+- \- pixel\_x => tileindex
+- \- pixel\_y => tileindex
 
-## latlng\_to\_xy()
+### Options
 
-Just internally call lng\_to\_x() and lat\_to\_y() for lat and lng.
+Currently, following options are supported.
 
-    my ($x, $y) = $pproj->latlng_to_xy($lat, $lng);
-    my ($x, $y) = $pproj->latlng_to_xy($lat, $lng, $zoom);
+- o zoom
 
-## x\_to\_lng()
+Specify zoom level used to calculate conversion.
 
-Calculate the lng by x and zoom.
+## convert()
 
-    my $lng = $pproj->x_to_lng($lng);
-    my $lng = $pproj->x_to_lng($lng, $zoom);
+Create and call converter by arguments specification.
 
-## y\_to\_lat()
+    my $x   = $pproj->convert('lng' => 'pixel_x', 138.0);
+    my $x19 = $pproj->convert('lng' => 'pixel_x', { zoom => 19 }, 138.0);
 
-Calculate the lat by y and zoom.
+    $pproj->convert('lat' => 'pixel_y', 34.0);
 
-    my $lat = $pproj->y_to_lat($lat);
-    my $lat = $pproj->y_to_lat($lat, $zoom);
+is a equivalent to
 
-## xy\_to\_latlng()
+    $pproj->converter('lat' => 'pixel_y')->(34.0);
 
-Just internally call x\_to\_lng() and y\_to\_lat() for x and y.
-
-    my ($lat, $lng) = $pproj->xy_to_latlng($x, $y);
-    my ($lat, $lng) = $pproj->xy_to_latlng($x, $y, $zoom);
+See the above section converter() for more detials about options and conversion.
 
 # AUTHOR
 
