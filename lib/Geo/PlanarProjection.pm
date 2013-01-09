@@ -6,16 +6,102 @@ use Math::Trig qw/ pi rad2deg deg2rad sinh /;
 
 our $VERSION = '0.01';
 
-our $R = 128 / pi;
+our $R            = 128 / pi;
 our $DEFAULT_ZOOM = 0;
 our $TILE_SIZE    = 256;
 
 sub new {
-    my ($class, %opts) = @_;
-    bless { zoom => $opts{zoom} // $DEFAULT_ZOOM }, $class;
+    my ($class, $src, $dst, $opts) = @_;
+
+    my $internalize = $class->can("_from_$src")
+        or croak "Unkown source: $src";
+    my $externalize = $class->can("_to_$dst")
+        or croak "Unkown destination: $dst";
+
+    bless {
+        internalizer => $internalize,
+        externalizer => $externalize,
+        zoom         => $opts->{zoom} // $DEFAULT_ZOOM,
+    }, $class;
 }
 
-sub zoom { (shift)->{zoom} }
+sub internalizer { (shift)->{internalizer} }
+sub externalizer { (shift)->{externalizer} }
+sub zoom         { (shift)->{zoom}         }
+
+sub convert {
+    my ($self, %args) = @_;
+
+    my $intz = $self->internalizer;
+    my $extz = $self->externalizer;
+
+    $self->externalizer->(
+        $self, $self->internalizer->($self, %args)
+    );
+}
+
+sub _from_latlng {
+    my ($self, %args) = @_;
+
+    ($self->_calc_x($args{lng} // 0.0), $self->_calc_y($args{lat} // 0.0));
+}
+
+sub _calc_x {
+    my ($self, $lng) = @_;
+
+    _round8( $R * (deg2rad($lng) + pi) );
+}
+
+sub _calc_y {
+    my ($self, $lat) = @_;
+
+    my $sinradlat = sin(deg2rad($lat));
+    _round8( -($R/2) * log( (1 + $sinradlat) / (1 - $sinradlat) ) + 128 );
+}
+
+sub _to_latlng {
+    my ($self, $x, $y) = @_;
+
+    +{ lat => $self->_calc_lat($y), lng => $self->_calc_lng($x) };
+}
+
+sub _calc_lng {
+    my ($self, $x) = @_;
+
+    _round8( rad2deg( $x / $R - pi ) );
+}
+
+sub _calc_lat {
+    my ($self, $y) = @_;
+
+    _round8( rad2deg( atan2(sinh( (128 - $y) / $R ), 1) ) );
+}
+
+sub _from_global {
+    my ($self, %args) = @_;
+
+    map { ($_ // 0.0) / _pow2of($self->zoom) } @args{qw/ x y /};
+}
+
+sub _to_global {
+    my ($self, $x, $y) = @_;
+
+    my ($px, $py) = map { $_ * _pow2of($self->zoom) } ($x, $y);
+    +{ x => $px, y => $py };
+}
+
+sub _from_tile {
+    my ($self, %args) = @_;
+
+    map { ( ($_ // 0.0) * $TILE_SIZE ) / _pow2of($self->zoom) } @args{qw/ x y /};
+}
+
+sub _to_tile {
+    my ($self, $x, $y) = @_;
+
+    my ($tx, $ty) = map { int( $_ * _pow2of($self->zoom) / $TILE_SIZE ) } ($x, $y);
+    +{ x => $tx, y => $ty };
+}
 
 my @POW2CACHE;
 sub _pow2of {
@@ -24,108 +110,6 @@ sub _pow2of {
 }
 
 sub _round8 { sprintf("%.8f", $_[0]) + 0 }
-
-sub _mixoptions {
-    my ($self, $opts) = @_;
-    ( zoom => $self->zoom, (ref $opts && ref $opts eq 'HASH') ? %$opts : () );
-}
-
-sub converter {
-    my ($self, $from, $to, $opts) = @_;
-    my %opts = $self->_mixoptions($opts);
-
-    my $cvtname = "_from_${from}_to_${to}";
-    if ($self->can($cvtname)) {
-        $self->$cvtname(%opts);
-    } else {
-        croak "I can't make converter '$from' => '$to'";
-    }
-}
-
-sub convert {
-    my $self = shift;
-
-    $self->converter(@_)->(
-        splice @_, (ref $_[2] && ref $_[2] eq 'HASH' ? 3 : 2)
-    );
-}
-
-sub _from_lng_to_pixel_x {
-    my ($self, %opts) = @_;
-
-    sub {
-        _round8(
-            $R * (deg2rad($_[0]) + pi)
-        ) * _pow2of($opts{zoom});
-    }
-}
-
-sub _from_lat_to_pixel_y {
-    my ($self, %opts) = @_;
-
-    sub {
-        my $sinradlat = sin(deg2rad($_[0]));
-        _round8(
-            -($R/2) * log( (1 + $sinradlat) / (1 - $sinradlat) ) + 128
-        ) * _pow2of($opts{zoom});
-    }
-}
-
-sub _from_latlng_to_pixel_xy {
-    my ($self, %opts) = @_;
-
-    my $latc = $self->_from_lat_to_y(%opts);
-    my $lngc = $self->_from_lng_to_x(%opts);
-
-    sub {
-        my ($lat, $lng) = @_;
-        ($lngc->($lng), $latc->($lat));
-    }
-}
-
-sub _from_pixel_x_to_lng {
-    my ($self, %opts) = @_;
-
-    sub {
-        _round8(
-            rad2deg( $_[0] / _pow2of($opts{zoom}) / $R - pi )
-        );
-    }
-}
-
-sub _from_pixel_y_to_lat {
-    my ($self, %opts) = @_;
-
-    sub {
-        _round8(
-            rad2deg( atan2(sinh( (128 - $_[0] / _pow2of($opts{zoom})) / $R ), 1) )
-        );
-    }
-}
-
-sub _from_pixel_xy_to_latlng {
-    my ($self, %opts) = @_;
-
-    my $xc = $self->_from_x_to_lng(%opts);
-    my $yc = $self->_from_y_to_lat(%opts);
-
-    sub {
-        my ($x, $y) = @_;
-        ($yc->($y), $xc->($x));
-    }
-}
-
-sub _from_pixel_x_to_tileindex {
-    my $self = shift;
-
-    sub {
-        int( $_[0] / $TILE_SIZE );
-    }
-}
-
-sub _from_pixel_y_to_tileindex {
-    _from_pixel_x_to_tileindex(@_)
-}
 
 1;
 __END__

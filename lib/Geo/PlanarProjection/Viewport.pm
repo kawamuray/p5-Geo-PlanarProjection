@@ -3,23 +3,27 @@ use strict;
 use warnings;
 use Carp;
 
-use parent 'Geo::PlanarProjection';
+use Geo::PlanarProjection;
 
 sub new {
     my ($class, %args) = @_;
-    my $self = $class->SUPER::new(%args);
 
-    $self->{width}  = $args{width};
-    $self->{height} = $args{height};
-    $self->{clat}   = $args{clat};
-    $self->{clng}   = $args{clng};
+    my $proj = Geo::PlanarProjection->new('latlng' => 'global', { zoom => $args{zoom} });
+    my $lt = $proj->convert(lng => $args{clng}, lat => $args{clat});
 
-    $self->{leftend} = $self->convert('lng' => 'pixel_x', $args{clng}) - $self->width / 2;
-    $self->{topend}  = $self->convert('lat' => 'pixel_y', $args{clat}) - $self->height / 2;
+    my $self = bless {
+        zoom   => $args{zoom},
+        width  => $args{width},
+        height => $args{height},
+        clat   => $args{clat},
+        clng   => $args{clng},
 
-    $self;
+        leftend => $lt->{x} - $args{width}  / 2,
+        topend  => $lt->{y} - $args{height} / 2,
+    }, $class;
 }
 
+sub zoom    { (shift)->{zoom}    }
 sub width   { (shift)->{width}   }
 sub height  { (shift)->{height}  }
 sub clat    { (shift)->{clat}    }
@@ -27,77 +31,36 @@ sub clng    { (shift)->{clng}    }
 sub leftend { (shift)->{leftend} }
 sub topend  { (shift)->{topend}  }
 
-sub _from_lng_to_view_x {
-    my $self = shift;
+sub localize {
+    my ($self, $src, $args) = @_;
 
-    my $lngtopx = $self->converter('lng' => 'pixel_x', @_);
-
-    sub {
-        $lngtopx->(shift) - $self->leftend;
+    my $proj = Geo::PlanarProjection->new($src => 'global', { zoom => $self->zoom });
+    my $gl = $proj->convert(%$args);
+    +{
+        x => $gl->{x} - $self->leftend,
+        y => $gl->{y} - $self->topend,
     };
 }
 
-sub _from_lat_to_view_y {
-    my $self = shift;
+sub globalize {
+    my ($self, $args, $dst) = @_;
 
-    my $lattopy = $self->converter('lat' => 'pixel_y', @_);
-
-    sub {
-        $lattopy->(shift) - $self->topend;
-    };
-}
-
-sub _from_view_x_to_lng {
-    my $self = shift;
-
-    my $pxtolng = $self->converter('pixel_x' => 'lng', @_);
-
-    sub {
-        $pxtolng->(shift() + $self->leftend);
-    };
-}
-
-sub _from_view_y_to_lat {
-    my $self = shift;
-
-    my $pytolat = $self->converter('pixel_y' => 'lat', @_);
-
-    sub {
-        $pytolat->(shift() + $self->topend);
-    };
+    my $proj = Geo::PlanarProjection->new('global' => $dst, { zoom => $self->zoom });
+    $proj->convert(
+        x => $args->{x} + $self->leftend,
+        y => $args->{y} + $self->topend,
+    );
 }
 
 sub range {
-    my $self = shift;
+    my ($self, $in) = @_;
+    $in //= 'global';
 
-    my @xrange = ($self->leftend, $self->leftend + $self->width);
-    my @yrange = ($self->topend,  $self->topend + $self->height);
+    my ($xmin, $xmax) = ($self->leftend, $self->leftend + $self->width);
+    my ($ymin, $ymax) = ($self->topend,  $self->topend + $self->height);
 
-    (\@xrange, \@yrange);
-}
-
-sub range_latlng {
-    my $self = shift;
-
-    my $vxtolng = $self->converter('view_x' => 'lng');
-    my $vytolat = $self->converter('view_y' => 'lat');
-
-    (
-        [ $vytolat->(0), $vytolat->($self->height) ],
-        [ $vxtolng->(0), $vxtolng->($self->width)  ],
-    );
-}
-
-sub range_tile {
-    my $self = shift;
-
-    my ($xrange, $yrange) = $self->range;
-
-    my $pxtotile = $self->converter('pixel_x' => 'tileindex');
-    (
-        [ $pxtotile->($xrange->[0]), $pxtotile->($xrange->[1]) + 1 ],
-        [ $pxtotile->($yrange->[0]), $pxtotile->($yrange->[1]) + 1 ],
-    );
+    my $proj = Geo::PlanarProjection->new('global' => ($in // 'global'), { zoom => $self->zoom });
+    ($proj->convert(x => $xmin, y => $ymin), $proj->convert(x => $xmax, y => $ymax));
 }
 
 1;
